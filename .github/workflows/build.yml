@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  build:
+  desktop:
     name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
 
@@ -18,8 +18,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Download LZ4
+        run: git clone https://github.com/lz4/lz4.git lz4-src
+
       - name: Configure
-        run: cmake -S lz4 -B build -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S lz4-src -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build --config Release -j 4
@@ -30,12 +33,12 @@ jobs:
           mkdir -p artifacts
 
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            cp build/liblz4.so artifacts/liblz4-linux.so || true
+            cp build/lib/liblz4.so artifacts/liblz4-linux.so || true
             cp build/lz4 artifacts/lz4-linux || true
           fi
 
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            cp build/liblz4.dylib artifacts/liblz4-macos.dylib || true
+            cp build/lib/liblz4.dylib artifacts/liblz4-macos.dylib || true
             cp build/lz4 artifacts/lz4-macos || true
           fi
 
@@ -44,7 +47,7 @@ jobs:
             cp build/Release/liblz4.dll artifacts/liblz4-windows.dll || true
           fi
 
-      - name: Upload
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: lz4-${{ matrix.os }}
@@ -58,7 +61,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install NDK
+      - name: Download LZ4
+        run: git clone https://github.com/lz4/lz4.git lz4-src
+
+      - name: Install Android SDK & NDK
         uses: android-actions/setup-android@v3
 
       - name: Setup NDK r27
@@ -68,7 +74,7 @@ jobs:
 
       - name: Configure
         run: |
-          cmake -S lz4 -B build \
+          cmake -S lz4-src -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_TOOLCHAIN_FILE=$ANDROID_HOME/ndk/27.0.12077973/build/cmake/android.toolchain.cmake \
             -DANDROID_ABI=arm64-v8a \
@@ -83,7 +89,7 @@ jobs:
           mkdir artifacts
           cp build/liblz4.so artifacts/liblz4-android-arm64.so || true
 
-      - name: Upload
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: lz4-android
