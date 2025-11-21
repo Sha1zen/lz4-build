@@ -54,8 +54,13 @@ jobs:
           path: artifacts/
 
   android:
-    name: Build (Android)
+    name: Build (Android ${{ matrix.abi }})
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: [armeabi-v7a, arm64-v8a, x86, x86_64]
 
     steps:
       - name: Checkout
@@ -77,7 +82,7 @@ jobs:
           cmake -S lz4-src/build/cmake -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_TOOLCHAIN_FILE=$ANDROID_HOME/ndk/27.0.12077973/build/cmake/android.toolchain.cmake \
-            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_ABI=${{ matrix.abi }} \
             -DANDROID_PLATFORM=21 \
             -DLZ4_BUILD_CLI=OFF
 
@@ -87,10 +92,10 @@ jobs:
       - name: Collect artifacts
         run: |
           mkdir artifacts
-          cp build/liblz4.so artifacts/liblz4-android-arm64.so || true
+          cp build/liblz4.so artifacts/liblz4-android-${{ matrix.abi }}.so || true
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: lz4-android
+          name: lz4-android-${{ matrix.abi }}
           path: artifacts/
