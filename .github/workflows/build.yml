@@ -124,9 +124,11 @@ jobs:
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_ARCHITECTURES="arm64" \
             -DCMAKE_OSX_SYSROOT=${{ matrix.sdk }} \
-            -DLZ4_BUILD_CLI=OFF
+            -DLZ4_BUILD_CLI=OFF \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DLZ4_POSITION_INDEPENDENT_LIB=ON
 
-      - name: Build
+      - name: Build static lib
         run: cmake --build build --config Release -j 4
 
       - name: Collect artifacts
@@ -139,3 +141,4 @@ jobs:
         with:
           name: lz4-ios-${{ matrix.sdk }}
           path: artifacts/
+
