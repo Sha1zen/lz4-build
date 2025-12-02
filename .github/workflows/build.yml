@@ -99,3 +99,43 @@ jobs:
         with:
           name: lz4-android-${{ matrix.abi }}
           path: artifacts/
+
+  ios:
+    name: Build (iOS)
+    runs-on: macos-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        sdk: [iphoneos, iphonesimulator]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download LZ4
+        run: git clone https://github.com/lz4/lz4.git lz4-src
+
+      - name: Configure
+        run: |
+          cmake -S lz4-src/build/cmake -B build \
+            -G Xcode \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_ARCHITECTURES="arm64" \
+            -DCMAKE_OSX_SYSROOT=${{ matrix.sdk }} \
+            -DLZ4_BUILD_CLI=OFF
+
+      - name: Build
+        run: cmake --build build --config Release -j 4
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p artifacts
+          cp build/Release-*/liblz4.a artifacts/liblz4-${{ matrix.sdk }}.a || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lz4-ios-${{ matrix.sdk }}
+          path: artifacts/
