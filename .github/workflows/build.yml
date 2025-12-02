@@ -1,4 +1,4 @@
-name: Build LZ4
+name: Build LZ4 for all shit
 
 on:
   push:
